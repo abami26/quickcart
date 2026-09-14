@@ -1,6 +1,9 @@
 package com.niit.quickcart.dto;
 
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Dtos {
 
@@ -19,6 +22,30 @@ public class Dtos {
         // e.g. { "1": 2, "3": 1 }  -> product id (as string) -> quantity
         public Map<String, Integer> items;
         public String address;
+        public String street;
+        public String city;
+        public String state;
+
+        public String composeAddress() {
+            if (address != null && !address.isBlank()) {
+                return address.trim();
+            }
+
+            String safeStreet = Optional.ofNullable(street).orElse("").trim();
+            String safeCity = Optional.ofNullable(city).orElse("Lagos").trim();
+            String safeState = Optional.ofNullable(state).orElse("Lagos").trim();
+
+            if (safeCity.isBlank()) {
+                safeCity = "Lagos";
+            }
+            if (safeState.isBlank()) {
+                safeState = "Lagos";
+            }
+
+            return Stream.of(safeStreet, safeCity, safeState)
+                    .filter(part -> !part.isBlank())
+                    .collect(Collectors.joining(", "));
+        }
     }
 
     public static class UserSummary {

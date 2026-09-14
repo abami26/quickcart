@@ -36,8 +36,18 @@ public class OrderController {
         if (req.items == null || req.items.isEmpty()) {
             throw new BadRequestException("Your cart is empty.");
         }
-        if (req.address == null || req.address.isBlank()) {
+
+        String composedAddress = req.composeAddress();
+        if (composedAddress == null || composedAddress.isBlank()) {
             throw new BadRequestException("Please provide a delivery address.");
+        }
+
+        String requestedState = req.state == null ? "" : req.state.trim().toLowerCase(Locale.ROOT);
+        if (!"lagos".equals(requestedState)) {
+            throw new BadRequestException("QuickCart delivery is available only in Lagos, Lagos State.");
+        }
+        if (req.city == null || req.city.isBlank()) {
+            throw new BadRequestException("Please choose a Lagos city for delivery.");
         }
 
         int subtotal = 0;
@@ -63,7 +73,7 @@ public class OrderController {
 
         Order order = new Order();
         order.setUserId(userId);
-        order.setAddress(req.address);
+        order.setAddress(composedAddress);
         order.setSubtotal(subtotal);
         order.setDeliveryFee(deliveryFee);
         order.setTotal(subtotal + deliveryFee);

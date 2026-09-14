@@ -90,8 +90,37 @@
   <div class="drawer-items" id="drawerItems"></div>
   <div class="drawer-foot">
     <div class="field" id="addressField" style="display:none;">
-      <label for="address">Delivery address</label>
-      <input type="text" id="address" placeholder="e.g. 14 Adeola Street, Ikeja">
+      <label for="streetAddress">Street address</label>
+      <input type="text" id="streetAddress" placeholder="e.g. 14 Adeola Street">
+
+      <div class="delivery-row">
+        <div class="delivery-col">
+          <label for="citySelect">City</label>
+          <select id="citySelect">
+            <option value="">Choose city</option>
+            <option value="Agege">Agege</option>
+            <option value="Alimosho">Alimosho</option>
+            <option value="Ajah">Ajah</option>
+            <option value="Badagry">Badagry</option>
+            <option value="Epe">Epe</option>
+            <option value="Ikeja">Ikeja</option>
+            <option value="Kosofe">Kosofe</option>
+            <option value="Lekki">Lekki</option>
+            <option value="Ojo">Ojo</option>
+            <option value="Somolu">Somolu</option>
+            <option value="Surulere">Surulere</option>
+            <option value="Victoria Island">Victoria Island</option>
+            <option value="Yaba">Yaba</option>
+          </select>
+        </div>
+
+        <div class="delivery-col">
+          <label for="stateSelect">State</label>
+          <select id="stateSelect">
+            <option value="Lagos" selected>Lagos</option>
+          </select>
+        </div>
+      </div>
     </div>
     <div class="row"><span>Subtotal</span><span id="subtotal">₦0</span></div>
     <div class="row"><span>Delivery fee</span><span id="deliveryFee">₦0</span></div>
@@ -198,15 +227,30 @@ async function checkout(){
     setTimeout(()=> window.location.href = 'login.html', 900);
     return;
   }
-  const address = document.getElementById('address').value.trim();
-  if (!address) {
-    showToast('Please enter a delivery address', true);
+
+  const street = document.getElementById('streetAddress').value.trim();
+  const city = document.getElementById('citySelect').value.trim();
+  const state = document.getElementById('stateSelect').value.trim();
+
+  if (!street) {
+    showToast('Please enter your street address', true);
     return;
   }
+  if (!city) {
+    showToast('Please choose a Lagos city', true);
+    return;
+  }
+  if (!state || state.toLowerCase() !== 'lagos') {
+    showToast('QuickCart delivery is only available in Lagos, Lagos State', true);
+    return;
+  }
+
+  const address = `${street}, ${city}, ${state}`;
+
   try {
     await api('/api/orders', {
       method: 'POST',
-      body: JSON.stringify({ items: cart, address })
+      body: JSON.stringify({ items: cart, address, street, city, state })
     });
     showToast('Order placed! Track it on the My orders page.');
     cart = {};

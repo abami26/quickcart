@@ -113,6 +113,14 @@ section{padding:10px 6vw 60px;}
 footer{padding:30px 6vw;border-top:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
 
 /* CART DRAWER */
+.delivery-row{display:flex;gap:10px;margin-top:10px;}
+.delivery-col{flex:1;}
+.delivery-col label{font-size:13px;color:var(--muted);display:block;margin-bottom:5px;}
+.delivery-row select,
+.delivery-col select{
+  width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;
+  font-family:'Inter';font-size:14px;color:var(--ink);background:#fff;
+}
 .overlay{
   position:fixed;inset:0;background:rgba(20,35,28,.35);opacity:0;pointer-events:none;
   transition:opacity .25s;z-index:20;
