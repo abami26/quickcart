@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My orders — QuickCart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="brand">Quick<span>Cart</span></a>
+  <nav><ul id="accountNav"></ul></nav>
+</header>
+
+<section>
+  <div class="section-head">
+    <div>
+      <h2>My orders</h2>
+      <p>Everything you've ordered through QuickCart.</p>
+    </div>
+  </div>
+  <div id="ordersList"></div>
+</section>
+
+<script src="common.js"></script>
+<script>
+async function loadOrders() {
+  if (!getUser()) {
+    window.location.href = 'login.html';
+    return;
+  }
+  const list = document.getElementById('ordersList');
+  try {
+    const { orders } = await api('/api/orders/mine');
+    if (!orders.length) {
+      list.innerHTML = `<div class="empty-msg">No orders yet. <a href="index.html">Go place one →</a></div>`;
+      return;
+    }
+    list.innerHTML = orders.map(o => `
+      <div class="order-card">
+        <div class="order-top">
+          <span>Order #${o.id}</span>
+          <span class="badge">${o.status}</span>
+        </div>
+        <div class="order-items">
+          ${o.items.map(i => `${i.qty}× ${i.name}`).join(' · ')}
+        </div>
+        <div class="order-items" style="color:var(--muted);font-size:13px;">
+          Delivering to: ${o.address}
+        </div>
+        <div class="order-total">${money(o.total)}</div>
+      </div>
+    `).join('');
+  } catch (err) {
+    list.innerHTML = `<div class="empty-msg">${err.message}</div>`;
+  }
+}
+
+renderAccountNav('accountNav');
+loadOrders();
+</script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuickCart — Local Delivery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="brand">Quick<span>Cart</span></a>
+  <nav><ul id="accountNav">
+    <li><a>Groceries</a></li>
+    <li><a>Meals</a></li>
+  </ul></nav>
+  <button class="cart-btn" onclick="openCart()">
+    🛍 Cart <span class="cart-count" id="cartCount">0</span>
+  </button>
+</header>
+
+<div class="hero">
+  <div>
+    <h1>Order from local shops.<br>Delivered in 30 minutes.</h1>
+    <p>QuickCart connects your neighborhood grocers and kitchens to a single checkout — pick what you need, and a rider brings it to your door.</p>
+    <button class="cta" onclick="document.getElementById('shop').scrollIntoView({behavior:'smooth'})">Start an order</button>
+    <div class="hero-stats">
+      <div><div class="num">120+</div><div class="lbl">Local vendors</div></div>
+      <div><div class="num">4.8★</div><div class="lbl">Average rating</div></div>
+      <div><div class="num">28 min</div><div class="lbl">Avg. delivery time</div></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="tag">Live order · Ikeja</div>
+    <div class="eta">27 min</div>
+    <div class="eta-lbl">Rider is packing your order at Mama Nkechi's Store</div>
+  </div>
+</div>
+
+<section id="shop">
+  <div class="section-head">
+    <div>
+      <h2>Popular near you</h2>
+      <p>Fresh picks from vendors closest to your delivery address.</p>
+    </div>
+    <div class="filters">
+      <button class="active" onclick="filterCat('all',this)">All</button>
+      <button onclick="filterCat('grocery',this)">Groceries</button>
+      <button onclick="filterCat('meal',this)">Meals</button>
+      <button onclick="filterCat('drink',this)">Drinks</button>
+    </div>
+  </div>
+  <div class="grid" id="productGrid"></div>
+</section>
+
+<div class="how">
+  <h2>How QuickCart works</h2>
+  <div class="how-grid">
+    <div class="step">
+      <div class="n">01</div>
+      <h3>Choose your items</h3>
+      <p>Browse nearby vendors and add whatever you need to your cart.</p>
+    </div>
+    <div class="step">
+      <div class="n">02</div>
+      <h3>Confirm delivery details</h3>
+      <p>Drop your address and pick a time — now or scheduled for later.</p>
+    </div>
+    <div class="step">
+      <div class="n">03</div>
+      <h3>Track it live</h3>
+      <p>Watch your rider move from the shop to your doorstep in real time.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div>© 2026 QuickCart — class project demo</div>
+  <div>Built for MMS4 NIIT Web Track</div>
+</footer>
+
+<div class="overlay" id="overlay" onclick="closeCart()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <h3>Your cart</h3>
+    <button class="close-btn" onclick="closeCart()">✕</button>
+  </div>
+  <div class="drawer-items" id="drawerItems"></div>
+  <div class="drawer-foot">
+    <div class="field" id="addressField" style="display:none;">
+      <label for="address">Delivery address</label>
+      <input type="text" id="address" placeholder="e.g. 14 Adeola Street, Ikeja">
+    </div>
+    <div class="row"><span>Subtotal</span><span id="subtotal">₦0</span></div>
+    <div class="row"><span>Delivery fee</span><span id="deliveryFee">₦0</span></div>
+    <div class="row total"><span>Total</span><span id="total">₦0</span></div>
+    <button class="checkout-btn" id="checkoutBtn" onclick="checkout()" disabled>Place order</button>
+  </div>
+</div>
+
+<script src="common.js"></script>
+<script>
+let PRODUCTS = [];
+let cart = {}; // {id: qty}
+let currentFilter = 'all';
+
+async function loadProducts() {
+  PRODUCTS = await api('/api/products');
+  renderGrid();
+}
+
+function renderGrid(){
+  const grid = document.getElementById('productGrid');
+  const items = PRODUCTS.filter(p => currentFilter==='all' || p.cat===currentFilter);
+  grid.innerHTML = items.map(p => `
+    <div class="card">
+      <div class="card-img">${p.icon}</div>
+      <h3>${p.name}</h3>
+      <p class="desc">${p.desc}</p>
+      <div class="card-foot">
+        <span class="price">${money(p.price)}</span>
+        <button class="add-btn" onclick="addToCart(${p.id})">+</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterCat(cat, btn){
+  currentFilter = cat;
+  document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrid();
+}
+
+function addToCart(id){
+  cart[id] = (cart[id] || 0) + 1;
+  updateCart();
+  showToast('Added to cart');
+}
+
+function changeQty(id, delta){
+  cart[id] = (cart[id]||0) + delta;
+  if(cart[id] <= 0) delete cart[id];
+  updateCart();
+}
+
+function updateCart(){
+  const ids = Object.keys(cart);
+  const count = ids.reduce((s,id)=>s+cart[id],0);
+  document.getElementById('cartCount').textContent = count;
+
+  const drawerItems = document.getElementById('drawerItems');
+  if(ids.length === 0){
+    drawerItems.innerHTML = `<div class="empty-msg">Your cart is empty.<br>Add something tasty from the shop.</div>`;
+  } else {
+    drawerItems.innerHTML = ids.map(id=>{
+      const p = PRODUCTS.find(x=>x.id==id);
+      return `
+        <div class="cart-line">
+          <div class="ic">${p.icon}</div>
+          <div class="info">
+            <div class="nm">${p.name}</div>
+            <div class="pr">${money(p.price)}</div>
+          </div>
+          <div class="qty">
+            <button onclick="changeQty(${id},-1)">−</button>
+            <span>${cart[id]}</span>
+            <button onclick="changeQty(${id},1)">+</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  const subtotal = ids.reduce((s,id)=> s + PRODUCTS.find(x=>x.id==id).price * cart[id], 0);
+  const fee = subtotal > 0 ? 800 : 0;
+  document.getElementById('subtotal').textContent = money(subtotal);
+  document.getElementById('deliveryFee').textContent = money(fee);
+  document.getElementById('total').textContent = money(subtotal + fee);
+  document.getElementById('checkoutBtn').disabled = subtotal === 0;
+  document.getElementById('addressField').style.display = subtotal > 0 ? 'block' : 'none';
+}
+
+function openCart(){
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closeCart(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+async function checkout(){
+  if (!getUser()) {
+    showToast('Please sign in to place an order', true);
+    setTimeout(()=> window.location.href = 'login.html', 900);
+    return;
+  }
+  const address = document.getElementById('address').value.trim();
+  if (!address) {
+    showToast('Please enter a delivery address', true);
+    return;
+  }
+  try {
+    await api('/api/orders', {
+      method: 'POST',
+      body: JSON.stringify({ items: cart, address })
+    });
+    showToast('Order placed! Track it on the My orders page.');
+    cart = {};
+    updateCart();
+    setTimeout(closeCart, 900);
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+renderAccountNav('accountNav');
+loadProducts();
+updateCart();
+</script>
+
+</body>
+</html>
