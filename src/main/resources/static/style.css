@@ -16,6 +16,38 @@ h1,h2,h3,.brand,.price{font-family:'Space Grotesk',sans-serif;}
 a{color:inherit;}
 img{max-width:100%;display:block;}
 
+/* SPLASH / WELCOME SCREEN */
+.splash{
+  position:fixed;inset:0;z-index:999;background:var(--green-deep);
+  display:flex;align-items:center;justify-content:center;
+  opacity:1;transition:opacity .5s ease;
+}
+.splash-hide{opacity:0;pointer-events:none;}
+.splash-inner{text-align:center;animation:splashPop .6s ease;}
+.splash-logo{
+  font-family:'Space Grotesk',sans-serif;font-size:48px;font-weight:700;
+  color:#fff;letter-spacing:-0.02em;
+}
+.splash-logo span{color:var(--mango);}
+.splash-tagline{color:#CFE3D6;font-size:15px;margin-top:10px;}
+.splash-loader{
+  width:120px;height:4px;background:rgba(255,255,255,.15);border-radius:4px;
+  margin:28px auto 0;overflow:hidden;
+}
+.splash-loader-bar{
+  width:40%;height:100%;background:var(--mango);border-radius:4px;
+  animation:splashLoad 1.1s ease-in-out infinite;
+}
+@keyframes splashPop{
+  from{opacity:0;transform:scale(.92);}
+  to{opacity:1;transform:scale(1);}
+}
+@keyframes splashLoad{
+  0%{transform:translateX(-100%);}
+  50%{transform:translateX(150%);}
+  100%{transform:translateX(150%);}
+}
+
 /* NAV */
 header{
   display:flex;align-items:center;justify-content:space-between;
