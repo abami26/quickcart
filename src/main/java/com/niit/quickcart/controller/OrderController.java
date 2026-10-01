@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.niit.quickcart.dto.Dtos.OrderRequest;
 import com.niit.quickcart.exception.BadRequestException;
+import com.niit.quickcart.data.StoreCatalog;
 import com.niit.quickcart.model.Order;
 import com.niit.quickcart.model.Product;
 import com.niit.quickcart.data.ProductCatalog;

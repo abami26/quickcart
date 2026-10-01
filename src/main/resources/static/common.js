@@ -36,11 +36,17 @@ function renderAccountNav(elId) {
   const user = getUser();
   if (user) {
     el.innerHTML = `
+      <a href="stores.html">Stores</a>
+      <a href="help.html">Help</a>
       <a href="orders.html">My orders</a>
       <button class="account-pill" onclick="logout()">Hi, ${user.name.split(' ')[0]} — Log out</button>
     `;
   } else {
-    el.innerHTML = `<a href="login.html" class="account-pill">Sign in</a>`;
+    el.innerHTML = `
+      <a href="stores.html">Stores</a>
+      <a href="help.html">Help</a>
+      <a href="login.html" class="account-pill">Sign in</a>
+    `;
   }
 }
 
@@ -62,4 +68,72 @@ async function api(path, options = {}) {
     throw new Error(data.error || 'Something went wrong. Please try again.');
   }
   return data;
+}
+
+function getAnalyticsConsent() {
+  return document.cookie.split('; ').find(cookie => cookie.startsWith('qc_analytics_consent='))?.split('=')[1] || '';
+}
+
+function setAnalyticsConsent(value) {
+  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `qc_analytics_consent=${value}; Max-Age=15552000; Path=/; SameSite=Lax${secure}`;
+}
+
+async function refreshVisitorCount() {
+  const display = document.getElementById('visitorCount');
+  try {
+    const result = await api('/api/visits', { method: 'POST' });
+    if (display) display.textContent = `${result.uniqueVisitors.toLocaleString()} unique browsers counted`;
+  } catch {
+    if (display) display.textContent = 'Visitor count unavailable';
+  }
+}
+
+function initializeVisitorCounter(forcePrompt = false) {
+  const consent = getAnalyticsConsent();
+  const display = document.getElementById('visitorCount');
+
+  if (consent === 'accepted' && !forcePrompt) {
+    refreshVisitorCount();
+    return;
+  }
+  if (consent === 'declined' && !forcePrompt) {
+    if (display) display.textContent = 'Visitor counting declined';
+    return;
+  }
+
+  document.getElementById('cookieNotice')?.remove();
+  const notice = document.createElement('aside');
+  notice.id = 'cookieNotice';
+  notice.className = 'cookie-notice';
+  notice.setAttribute('aria-label', 'Visitor count cookie settings');
+  notice.innerHTML = `
+    <div>
+      <strong>Help us count visits</strong>
+      <p>With your permission, a first-party cookie counts unique browsers. It does not identify you or collect your address.</p>
+    </div>
+    <div class="cookie-actions">
+      <button type="button" class="cookie-accept">Allow counting</button>
+      <button type="button" class="cookie-decline">Decline</button>
+    </div>
+  `;
+  notice.querySelector('.cookie-accept').addEventListener('click', () => {
+    setAnalyticsConsent('accepted');
+    notice.remove();
+    refreshVisitorCount();
+  });
+  notice.querySelector('.cookie-decline').addEventListener('click', () => {
+    setAnalyticsConsent('declined');
+    notice.remove();
+    if (display) display.textContent = 'Visitor counting declined';
+    api('/api/visits', { method: 'POST' }).catch(() => {});
+  });
+  document.body.appendChild(notice);
+}
+
+initializeVisitorCounter();
+
+function openVisitorCookieSettings(event) {
+  event.preventDefault();
+  initializeVisitorCounter(true);
 }

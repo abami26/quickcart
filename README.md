@@ -49,14 +49,29 @@ You need two things installed:
 ## Pages
 
 - `index.html` — shop, product grid, cart drawer, checkout
+- `stores.html` — filter partner stores by covered Lagos area
+- `help.html` — delivery coverage, location, payment, and order FAQs
 - `signup.html` / `login.html` — create an account / sign in
 - `orders.html` — see your past orders (only visible when logged in)
+
+The landing page includes an embedded Google Maps area search. The optional
+“Use my location” action needs browser location permission and a secure context
+(HTTPS or localhost); users can always choose their area manually. The map
+embed and external Google Maps link require an internet connection.
+
+The visitor counter uses an opt-in first-party consent cookie and an HttpOnly
+random browser ID. It stores only that ID and its first-seen timestamp, not IP
+addresses, account details, or delivery locations. The count represents unique
+consenting browsers, not verified people. Cookie settings are available in the
+homepage footer.
 
 ## API endpoints
 
 | Method | Route              | Auth required | Description               |
 |--------|---------------------|:--------------:|----------------------------|
 | GET    | `/api/products`     | No             | List all products          |
+| GET    | `/api/stores?city=<city>` | No        | List shops and products serving a Lagos area |
+| POST   | `/api/visits`       | No             | Count a consenting unique browser |
 | POST   | `/api/signup`       | No             | Create an account          |
 | POST   | `/api/login`        | No             | Log in, get a token        |
 | GET    | `/api/me`           | Yes            | Get the logged-in user     |
@@ -66,6 +81,11 @@ You need two things installed:
 Auth uses a JSON Web Token (JWT), same as the Node.js version — the token is
 stored in the browser's `localStorage` after login and sent as
 `Authorization: Bearer <token>` on every request that needs it.
+
+The homepage asks for a Lagos area before showing nearby shops and products.
+The current demo coverage is seeded for Agege, Alimosho, Ikeja, Kosofe, Ajah,
+Lekki, Victoria Island, Somolu, Surulere, and Yaba; other listed areas show an
+unavailable message until a shop is added for them.
 
 ## Peeking at the database
 
@@ -78,7 +98,7 @@ and use this JDBC URL to connect (username `sa`, no password):
 ```
 jdbc:h2:file:./data/quickcart
 ```
-You'll see two tables: `USERS` and `ORDERS` — good for showing your lecturer
+You'll see the `USERS`, `ORDERS`, and `SITE_VISITORS` tables — good for showing your lecturer
 that data is really being saved.
 
 ## Project structure
