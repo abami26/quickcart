@@ -19,4 +19,5 @@ class LagosAddressRequestTest {
         assertNotNull(address);
         assertEquals("15 Marina Road, Lagos, Lagos", address);
     }
+
 }

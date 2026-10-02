@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.niit.quickcart.dto.Dtos.OrderRequest;
 import com.niit.quickcart.exception.BadRequestException;
+import com.niit.quickcart.data.StoreCatalog;
 import com.niit.quickcart.model.Order;
 import com.niit.quickcart.model.Product;
 import com.niit.quickcart.data.ProductCatalog;
@@ -50,12 +51,23 @@ public class OrderController {
             throw new BadRequestException("Please choose a Lagos city for delivery.");
         }
 
+        Set<Integer> availableProductIds = StoreCatalog.findByCity(req.city).stream()
+                .flatMap(store -> store.getProducts().stream())
+                .map(Product::getId)
+                .collect(java.util.stream.Collectors.toSet());
+        if (availableProductIds.isEmpty()) {
+            throw new BadRequestException("No partner shops deliver to this area yet.");
+        }
+
         int subtotal = 0;
         List<Map<String, Object>> lineItems = new ArrayList<>();
 
         for (Map.Entry<String, Integer> entry : req.items.entrySet()) {
             int productId = Integer.parseInt(entry.getKey());
             int qty = entry.getValue();
+            if (!availableProductIds.contains(productId)) {
+                throw new BadRequestException("Some items are not available in your delivery area.");
+            }
             Product product = ProductCatalog.findById(productId);
             if (product == null) continue;
 
