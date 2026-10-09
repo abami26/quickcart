@@ -3,6 +3,6 @@ COPY . .
 RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jdk
-coPY --from-build /target/*. jar app. Jar
+coPY --from=build /target/*. jar app. jar
 EXPOSE 8080
-ENTRYPOINT I"java","-jar","/app. jar"
+ENTRYPOINT ["java","-jar","/app. jar"]
